@@ -19,14 +19,28 @@
 
 ## セットアップ
 
+プロジェクト直下の `env` フォルダに仮想環境がある想定です。
+
 ```bash
+# Windows (PowerShell / コマンドプロンプト)
+.\env\Scripts\activate
 pip install -r requirements.txt
 ```
 
 ## 起動
 
 ```bash
+.\env\Scripts\activate
 uvicorn app.main:app --reload
+```
+
+## テスト
+
+実 PostgreSQL に接続し、DB への更新が発生します。
+
+```bash
+.\env\Scripts\activate
+pytest tests/ -v
 ```
 
 - API: http://127.0.0.1:8000
