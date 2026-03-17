@@ -1,0 +1,102 @@
+DBはPostgreSQLで、既存で、レイアウトは以下
+
+DBの接続先は、.envで作成して。
+初期値は、
+Server: localhost
+Database: tamtdb
+Port: 5432
+Username: tamtuser
+Password: TAMTTAMT
+にして
+
+テーブル"public.transactions"
+        列         |             型              | 照合順序 | Null 値を許容 |                デフォルト
+-------------------+-----------------------------+----------+---------------+------------------------------------------
+ id                | integer                     |          | not null      | nextval('transactions_id_seq'::regclass)
+ used_date         | date                        |          | not null      |
+ purpose           | character varying           |          | not null      |
+ memo              | character varying           |          | not null      |
+ amount            | integer                     |          | not null      |
+ payment_source_id | integer                     |          | not null      |
+ paid_date         | date                        |          | not null      |
+ budget_name       | character varying           |          | not null      |
+ created_at        | timestamp without time zone |          | not null      | now()
+ updated_at        | timestamp without time zone |          | not null      | now()
+インデックス:
+    "transactions_pkey" PRIMARY KEY, btree (id)
+    "ix_transactions_id" btree (id)
+外部キー制約:
+    "transactions_payment_source_id_fkey" FOREIGN KEY (payment_source_id) REFERENCES payment_sources(id)
+
+テーブル"public.payment_sources"
+       列       |        型         | 照合順序 | Null 値を許容 |                 デフォルト
+----------------+-------------------+----------+---------------+---------------------------------------------
+ id             | integer           |          | not null      | nextval('payment_sources_id_seq'::regclass)
+ name           | character varying |          | not null      |
+ closing_day    | integer           |          | not null      |
+ pay_month_diff | integer           |          | not null      |
+ pay_day        | integer           |          | not null      |
+インデックス:
+    "payment_sources_pkey" PRIMARY KEY, btree (id)
+    "ix_payment_sources_id" btree (id)
+参照元:
+    TABLE "transactions" CONSTRAINT "transactions_payment_source_id_fkey" FOREIGN KEY (payment_source_id) REFERENCES payment_sources(id)
+
+
+pythonで、型ヒント句付けて
+fastapiで以下を作成
+
+1) 支出情報取得
+   入力値 なし
+   処理   payment_sourcesを検索し、id、nameのリストを返す
+
+2) 支出情報登録
+   入力値 名称、締日、支払月差分、支払日
+   処理   payment_sourcesに登録する。
+          name=名称
+          closing_day=締日
+          pay_month_diff=支払月差分
+          pay_day=支払日
+
+3) 支払日算出
+   入力値 利用日、payment_sourcesのid
+   処理   payment_sourcesを検索し、idが入力値のidと一致するレコードを検索する。
+          該当レコードが無い場合は、エラーを返す
+          closing_day=0の場合、支払い日として、入力された利用日を返す
+          closing_day≠0の場合、利用日の日<=締日の場合は、支払日として、月=利用日の月+pay_month_diffで、日=pay_dayの日付を返す
+          closing_day≠0の場合、利用日の日>締日の場合は、支払日として、月=利用日の月+pay_month_diff+1で、日=pay_dayの日付を返す
+
+4) 収支登録
+   入力値 日付、目的、メモ、金額、支出元ID、支出日、予算名
+          必須項目は、日付、目的、金額、支出ID、支出日
+   処理   transactionsにレコードを追加
+          予算名が未指定の場合には、「未分類」を設定する
+          
+5) 収支更新
+   入力値 transactionsのID、日付、目的、メモ、金額、支出元ID、支出日、予算名
+          必須項目は、transactionsのID
+   処理   指定された値で、transactionsのレコードを更新する
+
+6) 収支１件検索
+   入力値 transactionsのID
+   処理   transactions, payment_sourcesを検索し、以下を返す
+          transactionsからid, used_date, purpose, memo, amount, payment_source_id, paid_date, budget_name
+          payment_sourcesから、該当のname
+
+7) 収支利用日期間リスト検索
+   入力値 期間（自）、期間（至）
+   処理   transactionsを 期間（自）<= used_date <= 期間（至）の条件で検索し、以下のリストを返す
+          transactionsからid, used_date、purpose, amount, payment_source_id, paid_date, budget_name
+          payment_sourcesから、該当のname
+          
+8) 収支支払日期間リスト検索
+   入力値 期間（自）、期間（至）
+   処理   transactionsを 期間（自）<= paid_date <= 期間（至）の条件で検索し、以下のリストを返す
+          transactionsからid, used_date、purpose, amount, payment_source_id, paid_date, budget_name
+          payment_sourcesから、該当のname
+
+---
+
+DBレイアウトとAPIの仕様を、他の生成AIでも理解できるようにまとめて、別ファイルで出力して。
+
+

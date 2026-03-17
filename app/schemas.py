@@ -8,9 +8,12 @@ from pydantic import BaseModel, Field
 
 
 class PaymentSourceItem(BaseModel):
-    """支出元 1件（id, name）"""
+    """支出元 1件（id, name, closing_day, pay_month_diff, pay_day）"""
     id: int
     name: str
+    closing_day: int = Field(..., description="締日")
+    pay_month_diff: int = Field(..., description="支払月差分")
+    pay_day: int = Field(..., description="支払日")
 
 
 class PaymentSourceListResponse(BaseModel):

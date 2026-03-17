@@ -68,21 +68,33 @@
 ### API-1: 支出情報取得
 
 - **メソッド・パス**: `GET /payment-sources`
-- **概要**: 支払元の一覧（id と name のみ）を返す。
+- **概要**: 支払元の一覧（id, name, 締日, 支払月差分, 支払日）を返す。
 - **リクエスト**: パラメータなし。ボディなし。
 - **レスポンス**: HTTP 200。JSON:
 
 ```json
 {
   "items": [
-    { "id": 1, "name": "カードA" },
-    { "id": 2, "name": "カードB" }
+    {
+      "id": 1,
+      "name": "カードA",
+      "closing_day": 25,
+      "pay_month_diff": 1,
+      "pay_day": 10
+    },
+    {
+      "id": 2,
+      "name": "カードB",
+      "closing_day": 0,
+      "pay_month_diff": 0,
+      "pay_day": 1
+    }
   ]
 }
 ```
 
-- **型**: `items` は配列。各要素は `{ "id": integer, "name": string }`。
-- **処理**: payment_sources を id の昇順で取得し、各レコードの id と name を返す。
+- **型**: `items` は配列。各要素は `{ "id": integer, "name": string, "closing_day": integer, "pay_month_diff": integer, "pay_day": integer }`。
+- **処理**: payment_sources を id の昇順で取得し、各レコードの id, name, closing_day（締日）, pay_month_diff（支払月差分）, pay_day（支払日）を返す。
 
 ---
 

@@ -1,0 +1,15 @@
+機能修正
+
+1) 支出情報取得
+   入力値 なし
+   処理   payment_sourcesを検索し、id、nameのリストを返す
+
+としていた部分で、以下も返すようにして。
+
+   closing_day=締日
+   pay_month_diff=支払月差分
+   pay_day=支払日
+
+この修正にともなって、doc/DB_AND_API_SPEC.md も更新して
+
+         

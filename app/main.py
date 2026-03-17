@@ -69,12 +69,21 @@ def calc_paid_date(used_date: date, closing_day: int, pay_month_diff: int, pay_d
     "/payment-sources",
     response_model=PaymentSourceListResponse,
     summary="支出情報取得",
-    description="payment_sources を検索し、id・name のリストを返す",
+    description="payment_sources を検索し、id・name・締日・支払月差分・支払日のリストを返す",
 )
 def get_payment_sources(db: Session = Depends(get_db)) -> PaymentSourceListResponse:
     sources = db.query(PaymentSource).order_by(PaymentSource.id).all()
     return PaymentSourceListResponse(
-        items=[PaymentSourceItem(id=s.id, name=s.name) for s in sources]
+        items=[
+            PaymentSourceItem(
+                id=s.id,
+                name=s.name,
+                closing_day=s.closing_day,
+                pay_month_diff=s.pay_month_diff,
+                pay_day=s.pay_day,
+            )
+            for s in sources
+        ]
     )
 
 
